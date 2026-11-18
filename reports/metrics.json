@@ -1,0 +1,35 @@
+{
+  "cv": {
+    "logistic_regression": {
+      "cv_pr_auc": 0.6118,
+      "cv_roc_auc": 0.8534
+    },
+    "random_forest": {
+      "cv_pr_auc": 0.5404,
+      "cv_roc_auc": 0.8298
+    },
+    "xgboost": {
+      "cv_pr_auc": 0.6168,
+      "cv_roc_auc": 0.8641
+    }
+  },
+  "test": {
+    "model": "xgboost",
+    "threshold": 0.13,
+    "test_pr_auc": 0.564,
+    "test_roc_auc": 0.8413,
+    "precision": 0.4741,
+    "recall": 0.8871,
+    "confusion_matrix": {
+      "tn": 127,
+      "fp": 61,
+      "fn": 7,
+      "tp": 55
+    },
+    "test_claims": 250,
+    "alerts_raised": 116,
+    "estimated_cost_no_model_cad": 620000,
+    "estimated_cost_with_model_cad": 100500,
+    "estimated_saving_pct": 83.8
+  }
+}
