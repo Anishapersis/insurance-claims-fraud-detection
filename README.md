@@ -58,6 +58,32 @@ Removing one implausible feature costs about 10 points of ROC-AUC. Much of the h
 
 ![App](reports/figures/app_screenshot.png)
 
+## REST API (FastAPI + Docker)
+
+The same model is served as a REST API so other systems (a claims intake service, a batch job) can score claims.
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /health` | liveness check |
+| `GET /schema` | raw fields a claim must include |
+| `POST /predict` | fraud score, cost-based decision (`refer_to_siu` / `fast_track`) and top-5 SHAP reasons |
+
+Engineered features (policy age, claim shares, claim-to-premium) are computed server-side from the raw claim, so callers send the same fields as the source data. Missing fields return a 422 listing what is missing.
+
+```bash
+docker build -t fraud-api .          # trains the model inside the image
+docker run -p 8000:8000 fraud-api    # interactive docs at http://localhost:8000/docs
+```
+
+Example response:
+
+```json
+{"fraud_score": 0.91, "threshold": 0.13, "decision": "refer_to_siu",
+ "top_reasons": [{"feature": "incident_severity_Major Damage", "contribution": 1.49},
+                 {"feature": "insured_hobbies_sleeping", "contribution": -0.56}, "..."],
+ "model_version": "XGBClassifier"}
+```
+
 ## Approach
 
 1. **Cleaning:** `?` placeholders become explicit `UNKNOWN` categories (a missing police report is itself informative). Identifiers such as policy number, ZIP code and street address are dropped to avoid memorising rows.
@@ -72,15 +98,17 @@ Removing one implausible feature costs about 10 points of ROC-AUC. Much of the h
 ```
 ├── app.py                  # Streamlit triage app
 ├── data/                  # dataset is downloaded automatically on first run
+├── Dockerfile              # containerised API
 ├── src/fraud/
 │   ├── data.py             # loading, cleaning, feature engineering
+│   ├── api.py              # FastAPI service: /health, /schema, /predict
 │   ├── train.py            # CV comparison, threshold, test evaluation, SHAP
 │   └── leakage_check.py    # ablation of the suspicious hobby feature
 ├── reports/
 │   ├── metrics.json        # all CV and test metrics
 │   ├── top_features.json
 │   └── figures/
-├── tests/test_data.py      # data-contract tests (pytest)
+├── tests/                  # data-contract and API tests (pytest)
 ├── MODEL_CARD.md
 └── requirements.txt
 ```
@@ -90,8 +118,9 @@ Removing one implausible feature costs about 10 points of ROC-AUC. Much of the h
 ```bash
 pip install -r requirements.txt
 python src/fraud/train.py      # trains, evaluates, writes models/ and reports/
-pytest -q                      # 5 data tests
-streamlit run app.py
+pytest -q                      # data + API tests
+streamlit run app.py           # triage UI
+uvicorn fraud.api:app --app-dir src --port 8000   # REST API
 ```
 
 ## Data
