@@ -131,3 +131,7 @@ uvicorn fraud.api:app --app-dir src --port 8000   # REST API
 
 - Probability calibration (isotonic) so scores can be read as fraud likelihoods.
 - Monitoring: data drift on claim amounts and severity mix, plus monthly precision@k from SIU outcomes.
+
+## Author
+
+**Anisha Persis Christopher**, Data Scientist · [LinkedIn](https://www.linkedin.com/in/anishapersis) · [GitHub](https://github.com/Anishapersis)
